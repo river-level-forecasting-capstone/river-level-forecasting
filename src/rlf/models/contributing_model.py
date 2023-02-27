@@ -155,3 +155,10 @@ class ContributingModel(GlobalForecastingModel):
             contributing_model._base_model = contributing_model._base_model.load(path + "_base_model")
 
         return contributing_model
+
+    def unload_base_model(self) -> None:
+        self._base_model = self._base_model.__class__
+
+    def load_base_model(self, path: str) -> None:
+        # TODO add a check here to make sure _base_model is a class object (i.e. it has been unloaded already)
+        self._base_model = self._base_model.load(path + "_base_model")
