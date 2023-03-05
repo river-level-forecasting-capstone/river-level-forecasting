@@ -95,7 +95,7 @@ class BaseDataset(ABC):
 
         X = self._add_engineered_features(X)
 
-        prefix = f"{datum.longitude:.2f}_{datum.latitude:.2f}_"
+        prefix = self.prefix_for_lon_lat(datum.longitude, datum.latitude)
         if prefix not in self.subsets:
             X.columns = [prefix + c for c in X.columns]
             self.subsets[prefix] = Coordinate(lon=datum.longitude, lat=datum.latitude)
@@ -172,3 +172,16 @@ class BaseDataset(ABC):
         first_timestamp = max([df.index.to_series().min() for df in all_dfs])
         last_timestamp = min([df.apply(lambda x: x.last_valid_index()).max() for df in all_dfs])
         return first_timestamp.replace(tzinfo=None), last_timestamp.replace(tzinfo=None)
+
+    @staticmethod
+    def prefix_for_lon_lat(lon: float, lat: float) -> str:
+        """Generate the feature name prefix for the given lon-lat coordinate.
+
+        Args:
+            lon (float): longitude of the coordinate.
+            lat (float): latitude of the coordinate
+
+        Returns:
+            str: prefix to use for a feature name belonging to this coordinate.
+        """
+        return f"{lon:.2f}_{lat:.2f}_"
