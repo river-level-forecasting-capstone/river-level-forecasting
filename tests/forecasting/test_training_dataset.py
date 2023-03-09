@@ -1,7 +1,7 @@
 import pytest
 
 from rlf.forecasting.catchment_data import CatchmentData
-from rlf.forecasting.training_dataset import TrainingDataset
+from rlf.forecasting.training_dataset import TrainingDataset, PartitionedTrainingDataset
 from fake_providers import FakeLevelProvider, FakeWeatherProvider
 
 
@@ -91,3 +91,53 @@ def test_correct_precision(catchment_data):
     assert train_ds.X_test.dtype == "float32"
     assert train_ds.y_train.dtype == "float32"
     assert train_ds.y_test.dtype == "float32"
+
+
+def test_partitioned_training_dataset(catchment_data, tmp_path):
+    # 12 locations
+    training_dataset = PartitionedTrainingDataset(
+        catchment_data=catchment_data,
+        cache_path=tmp_path,
+        test_size=0.3,
+    )
+
+    assert isinstance(training_dataset, TrainingDataset)
+    assert training_dataset.num_feature_partitions == 12
+
+    assert training_dataset.X is None
+    assert training_dataset.X_train is None
+    assert training_dataset.X_test is None
+
+    assert training_dataset.y is not None
+    assert training_dataset.y_train is not None
+    assert training_dataset.y_test is not None
+
+    training_dataset.load_feature_partition(0)
+    assert training_dataset.X is not None
+    assert len(training_dataset.X) == 10
+
+    # need to fix the issues with pulling the scaled data for the test
+    assert all([x.values()[0][0] <= 1.2 for x in training_dataset.X.max(axis=1)])
+    assert all([x.values()[0][0] >= -0.1 for x in training_dataset.X.min(axis=1)])
+
+    assert training_dataset.X_train is not None
+    assert training_dataset.X_test is not None
+    assert len(training_dataset.X_train) == 7
+    assert len(training_dataset.X_test) == 3
+
+    expected_columns = [f"{training_dataset.prefix_for_lon_lat(training_dataset.feature_partitions[0].lon, training_dataset.feature_partitions[0].lat)}{col}" for col in ["weather_attr_1", "weather_attr_2", "day_of_year"]]
+    assert list(training_dataset.X.columns) == expected_columns
+
+    assert all([pytest.approx(1.0) == x for x in training_dataset.X_train.pd_dataframe().max()[:-1]])
+    assert all([pytest.approx(0.0) == x for x in training_dataset.X_train.pd_dataframe().min()])
+    assert all([x <= 1.2 for x in training_dataset.X_test.pd_dataframe().max()])
+    assert all([x >= -0.1 for x in training_dataset.X_test.pd_dataframe().min()])
+
+    training_dataset.load_feature_partition(1)
+
+    expected_columns = [f"{training_dataset.prefix_for_lon_lat(training_dataset.feature_partitions[1].lon, training_dataset.feature_partitions[1].lat)}{col}" for col in ["weather_attr_1", "weather_attr_2", "day_of_year"]]
+    assert list(training_dataset.X.columns) == expected_columns
+
+    # scaler will just see the min and max values
+    assert training_dataset.scaler._fitted_params[0].n_samples_seen_ == 2
+    assert training_dataset.scaler._fitted_params[0].n_features_in_ == 36

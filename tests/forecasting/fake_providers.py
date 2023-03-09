@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
+from rlf.forecasting.data_fetching_utilities.coordinate import Coordinate
 from rlf.forecasting.data_fetching_utilities.weather_provider.weather_datum import WeatherDatum
 
 
@@ -65,9 +66,16 @@ class FakeWeatherProvider:
     def __init__(self, num_locs=12, num_historical_samples=10) -> None:
         self.num_locs = num_locs
         self.num_historical_samples = num_historical_samples
+        self._historical_data = weather_datums(self.num_historical_samples, self.num_locs)
+        self.coordinates = [Coordinate(datum.longitude, datum.latitude) for datum in self._historical_data]
 
     def fetch_current(self, columns=None):
         return weather_datums(10, self.num_locs)
 
     def fetch_historical(self, columns=None, start_date=None):
-        return weather_datums(self.num_historical_samples, self.num_locs)
+        response = [
+            datum
+            for datum in self._historical_data
+            if Coordinate(datum.longitude, datum.latitude) in self.coordinates
+        ]
+        return response
