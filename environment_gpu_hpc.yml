@@ -1,0 +1,36 @@
+name: river-level-gpu-hpc
+channels:
+  - conda-forge
+  - pytorch
+  - nvidia
+  - defaults
+dependencies:
+  # Add additional Conda dependencies here
+  # Version lock critical packages using '=' ie:
+  # - packageName=0.123
+  - python>=3.10
+  - flake8                  # Linter for style adherence
+  - mypy                    # Static type checker
+  - pytest                  # Unit testing framework
+  - boto3                   # AWS S3 interaction
+  - s3fs                    # AWS S3 interaction TODO: Convert to only boto3 OR only s3fs (Issue #30)
+  - holidays=0.24           # Holiday calendar for time series forecasting. Version locked to avoid upstream issue.
+  - pytorch-cuda=12.1
+  - torchvision=0.17.1
+  - torchaudio=2.2.1
+  - pytorch=2.2.1           # Core underlying neural network library
+  - pytorch-lightning=1.9.3 # High level interface for pytorch
+  - u8darts-all=0.23        # Core Timeseries forecasting library
+  - pip                     # Package installer for dependencies not available through Conda
+  - pip:
+    # Add pip packages which are not available through conda here
+    # Note: to version lock a pip package, use '==' not '=' ie:
+    # - packageName==0.123
+    - dataretrieval # Package for fetching NWIS river level dataa
+    - simplekml     # Weather location KML generation
+    - pyarrow       # Parquet file creation
+    - scikit-learn==1.3   # ML library used internally by darts
+    - openmeteo-requests==1.1.0 # Handling Open Meteo HTTP Request
+    - requests-cache==1.1.1 # Improves performance of HTTP Requests
+    - retry-requests==2.0.0 # For retrying failed requests
+    - openmeteo-sdk==1.7.0 # For creating a WeatherApiResponse object
