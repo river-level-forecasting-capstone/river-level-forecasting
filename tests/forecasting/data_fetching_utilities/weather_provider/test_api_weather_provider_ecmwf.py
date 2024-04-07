@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from rlf.forecasting.data_fetching_utilities.coordinate import Coordinate
 from rlf.forecasting.data_fetching_utilities.weather_provider.api_weather_provider_ecmwf import APIWeatherProviderECMWF
@@ -31,7 +32,7 @@ def test_fetch_current_equivalence(weather_provider_ecmwf):
     test_list_1 = weather_provider_ecmwf.fetch_current(["temperature_2m", "rain"])
     test_list_2 = weather_provider_ecmwf.fetch_current(["temperature_2m", "rain"])
 
-    assert test_list_1[0].hourly_parameters.iloc[0, 0] == test_list_2[0].hourly_parameters.iloc[0, 0]
+    assert test_list_1[0].hourly_parameters.iloc[0, 0] == test_list_2[0].hourly_parameters.iloc[0, 0] or (np.isnan(test_list_1[0].hourly_parameters.iloc[0, 0]) and np.isnan(test_list_2[0].hourly_parameters.iloc[0, 0]))
 
 
 def test_fetch_historical(weather_provider_ecmwf):
@@ -47,4 +48,4 @@ def test_fetch_historical_equivalence(weather_provider_ecmwf):
     test_list_1 = weather_provider_ecmwf.fetch_historical(["temperature_2m", "rain"])
     test_list_2 = weather_provider_ecmwf.fetch_historical(["temperature_2m", "rain"])
 
-    assert test_list_1[0].hourly_parameters.iloc[0, 0] == test_list_2[0].hourly_parameters.iloc[0, 0]
+    assert test_list_1[0].hourly_parameters.iloc[0, 0] == test_list_2[0].hourly_parameters.iloc[0, 0] or (np.isnan(test_list_1[0].hourly_parameters.iloc[0, 0]) and np.isnan(test_list_2[0].hourly_parameters.iloc[0, 0]))
